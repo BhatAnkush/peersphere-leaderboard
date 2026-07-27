@@ -10,7 +10,34 @@ const $ = sel => document.querySelector(sel);
 
 const CONFIG_PATH = 'config.json';
 const REFRESH_INTERVAL_SEC = 60;
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 min fallback; overridden by config.json cacheTTLMinutes
 const GH_TOKEN = ''; // optional: set a personal access token here to raise rate limits
+
+/* ---------- cache helpers ---------- */
+function cacheKey(){
+  const d = new Date();
+  return `ps_lb_cache_${d.getFullYear()}_${d.getMonth()}_${d.getDate()}`;
+}
+function readCache(){
+  try{
+    const raw = localStorage.getItem(cacheKey());
+    if (!raw) return null;
+    const { ts, teamStats, userStats } = JSON.parse(raw);
+    const ttl = (state.config && state.config.settings && state.config.settings.cacheTTLMinutes)
+      ? state.config.settings.cacheTTLMinutes * 60 * 1000
+      : CACHE_TTL_MS;
+    if (Date.now() - ts > ttl) return null; // stale
+    return { teamStats, userStats };
+  }catch(e){ return null; }
+}
+function writeCache(teamStats, userStats){
+  try{
+    localStorage.setItem(cacheKey(), JSON.stringify({ ts: Date.now(), teamStats, userStats }));
+  }catch(e){}
+}
+function clearCache(){
+  localStorage.removeItem(cacheKey());
+}
 
 function toast(msg, isErr){
   const t = $('#toast');
@@ -146,6 +173,8 @@ async function buildStats(){
 
   state.teamStats = teamStats;
   state.userStats = userStats;
+
+  writeCache(teamStats, userStats);
 }
 
 function initialAvatarSvg(letter, bg){
@@ -254,8 +283,23 @@ function render(){
   renderList(items, state.view);
 }
 
-async function refreshAll(){
+async function refreshAll(manual = false){
   $('#lastUpdated').textContent = 'syncing…';
+
+  // use cache unless this is a manual force-refresh
+  if (!manual){
+    const cached = readCache();
+    if (cached){
+      state.teamStats = cached.teamStats;
+      state.userStats = cached.userStats;
+      render();
+      $('#lastUpdated').textContent = 'from cache · ' + new Date().toLocaleTimeString();
+      return;
+    }
+  } else {
+    clearCache();
+  }
+
   try{
     await buildStats();
     render();
@@ -295,6 +339,6 @@ document.querySelectorAll('.tab-btn').forEach(btn=>{
   });
 });
 
-$('#refreshBtn').addEventListener('click', refreshAll);
+$('#refreshBtn').addEventListener('click', () => refreshAll(true));
 
 loadConfigAndStart();
