@@ -1,0 +1,34 @@
+{
+  "settings": {
+    "timezone": "Asia/Kolkata",
+    "refreshIntervalSeconds": 60,
+    "countOnlyDefaultBranchAlso": true
+  },
+  "teams": [
+    {
+      "teamName": "Team PeerSphere",
+      "repo": "https://github.com/BhatAnkush/peersphere-leaderboard",
+      "members": [
+        { "name": "Ankush Bhat", "githubUsername": "BhatAnkush", "email": "ankushbhataab@gmail.com" },
+        { "name": "Adish yermal", "githubUsername": "the-ay", "email": "adishyermal12@gmail.com" },
+        { "name": "Skanda Ganesh ", "githubUsername": "Skandaganesh", "email": "skandaganeshpv@gmail.com" }
+      ]
+    },
+    {
+      "teamName": "Team Vipers",
+      "repo": "https://github.com/vercel/next.js",
+      "members": [
+        { "name": "Charlie Rao", "githubUsername": "timneutkens", "email": "charlie@example.com" },
+        { "name": "Divya Iyer", "githubUsername": "ijjk", "email": "divya@example.com" }
+      ]
+    },
+    {
+      "teamName": "Team Cobras",
+      "repo": "https://github.com/microsoft/vscode",
+      "members": [
+        { "name": "Esha Nair", "githubUsername": "bpasero", "email": "esha@example.com" },
+        { "name": "Farhan Khan", "githubUsername": "jrieken", "email": "farhan@example.com" }
+      ]
+    }
+  ]
+}
