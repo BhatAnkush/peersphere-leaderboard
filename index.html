@@ -46,6 +46,9 @@
 
 <div id="toast"></div>
 
+<!-- Inline fallback: guarantees window.__ENV__ exists even if env.js fails to load -->
+<script>window.__ENV__ = window.__ENV__ || { GH_TOKEN: '' };</script>
+<script src="env.js" onerror="console.warn('env.js not found — running without a GitHub token')"></script>
 <script src="script.js"></script>
 </body>
 </html>

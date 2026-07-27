@@ -104,9 +104,9 @@ header{
   margin-bottom:-1px;
   z-index:2;
 }
-.rank-1 .podium-card{border-color:#5a481d;box-shadow:0 0 40px -10px rgba(232,184,75,.35);}
-.rank-2 .podium-card{border-color:#3a3f47;box-shadow:0 0 30px -12px rgba(199,205,214,.22);}
-.rank-3 .podium-card{border-color:#4a3020;box-shadow:0 0 30px -12px rgba(201,122,74,.25);}
+.rank-1 .podium-card{border-color:#5a481d;box-shadow:0 0 40px -10px rgba(232,184,75,.35); margin-bottom: 10px;}
+.rank-2 .podium-card{border-color:#3a3f47;box-shadow:0 0 30px -12px rgba(199,205,214,.22);margin-bottom: 10px;}
+.rank-3 .podium-card{border-color:#4a3020;box-shadow:0 0 30px -12px rgba(201,122,74,.25);margin-bottom: 10px;}
 
 .medal{
   width:46px;height:46px;border-radius:50%;

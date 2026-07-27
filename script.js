@@ -11,7 +11,9 @@ const $ = sel => document.querySelector(sel);
 const CONFIG_PATH = 'config.json';
 const REFRESH_INTERVAL_SEC = 60;
 const CACHE_TTL_MS = 5 * 60 * 1000; // 5 min fallback; overridden by config.json cacheTTLMinutes
-const GH_TOKEN = ''; // optional: set a personal access token here to raise rate limits
+// Token is injected at runtime from env.js (local) or build.js+Vercel env vars (production).
+// Never hardcode a real token here — this file is committed to git.
+const GH_TOKEN = (window.__ENV__ && window.__ENV__.GH_TOKEN) || '';
 
 /* ---------- cache helpers ---------- */
 function cacheKey(){

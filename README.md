@@ -23,12 +23,17 @@ A **real-time, animated GitHub commit leaderboard** for teams and contributors. 
 
 ```
 peersphere-leaderboard/
-├── index.html       # Markup & layout
-├── styles.css       # All styling & animations
-├── script.js        # Data fetching, caching, rendering logic
-├── config.json      # Teams, repos & members — the only file you edit regularly
-├── peersphere.png   # Logo shown in the header
-└── README.md        # You are here
+├── index.html        # Markup & layout
+├── styles.css        # All styling & animations
+├── script.js         # Data fetching, caching, rendering logic
+├── config.json       # Teams, repos & members — edit this regularly
+├── env.js            # ⚠️  Local secrets file — gitignored, never commit
+├── env.example.js    # Template for env.js — committed to git
+├── build.js          # Vercel build script — writes env.js from env vars
+├── vercel.json       # Vercel config — sets the build command
+├── .gitignore        # Keeps env.js out of git
+├── peersphere.png    # Logo shown in the header
+└── README.md         # You are here
 ```
 
 ---
@@ -44,7 +49,23 @@ git clone https://github.com/BhatAnkush/peersphere-leaderboard.git
 cd peersphere-leaderboard
 ```
 
-### 2. Edit `config.json`
+### 2. Set up your local env file
+
+```bash
+cp env.example.js env.js
+```
+
+Then open `env.js` and optionally paste in a GitHub token (see [Rate Limit](#-beating-the-github-rate-limit)):
+
+```js
+window.__ENV__ = {
+  GH_TOKEN: 'ghp_your_token_here', // or leave empty for unauthenticated mode
+};
+```
+
+> `env.js` is gitignored — your token never enters version control.
+
+### 3. Edit `config.json`
 
 ```json
 {
@@ -58,18 +79,14 @@ cd peersphere-leaderboard
       "teamName": "Team Alpha",
       "repo": "https://github.com/your-org/your-repo",
       "members": [
-        {
-          "name": "Jane Doe",
-          "githubUsername": "janedoe",
-          "email": "jane@example.com"
-        }
+        { "name": "Jane Doe", "githubUsername": "janedoe", "email": "jane@example.com" }
       ]
     }
   ]
 }
 ```
 
-### 3. Serve locally
+### 4. Serve locally
 
 Any static server works:
 
@@ -91,27 +108,39 @@ Then open **http://localhost:8080** in your browser.
 
 GitHub allows **60 unauthenticated API requests per hour** per IP. With multiple teams and many branches this can run out quickly.
 
-### Option A — Add a Personal Access Token (recommended)
+### Option A — Personal Access Token via `env.js` (recommended)
+
+The token is **never hardcoded in source code**. Instead it lives in a gitignored runtime file:
 
 1. Go to **GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens**
-2. Create a token with **read-only access to public repositories** (no extra scopes needed for public repos)
-3. Open `script.js` and paste it into the constant at the top:
+2. Create a token — no extra scopes needed for public repos
+3. Paste it into your local `env.js`:
 
 ```js
-const GH_TOKEN = 'ghp_your_token_here';
+// env.js  (gitignored — safe to put real secrets here)
+window.__ENV__ = {
+  GH_TOKEN: 'ghp_your_token_here',
+};
 ```
 
-> This raises your limit to **5 000 requests per hour** — more than enough for any team size.
+> This raises the limit to **5 000 requests per hour** — more than enough for any team size.
 
-### Option B — Rely on the built-in cache (no token required)
+### Option B — Built-in cache (no token required)
 
-The leaderboard caches each day's results in `localStorage` with a **5-minute TTL** (configurable via `cacheTTLMinutes` in `config.json`).
+The leaderboard caches each day's results in `localStorage` with a configurable TTL.
 
-- On page load or auto-refresh → served from cache if fresh ✅
-- After 5 minutes → fetches live data from GitHub 🔄
-- ↻ Refresh button → **always** fetches live and resets the cache 🔃
+| Trigger | Behaviour |
+|---|---|
+| Page load / auto-refresh | Served from cache if fresh — **0 API calls** ✅ |
+| Cache older than TTL | Fetches live from GitHub and refreshes cache 🔄 |
+| ↻ Refresh button | Always clears cache and pulls live data 🔃 |
+| New day | Cache key includes date, so it auto-expires at midnight 🌙 |
 
-This means even without a token you can have the page open all day without ever hitting 60 requests, as long as you don't hammer the manual refresh button.
+Set the TTL in `config.json`:
+
+```json
+"settings": { "cacheTTLMinutes": 10 }
+```
 
 ---
 
@@ -130,14 +159,21 @@ This means even without a token you can have the page open all day without ever 
 | `teams[].members[].githubUsername` | string | GitHub login — primary matching key |
 | `teams[].members[].email` | string | Fallback matching key when GitHub login is unavailable |
 
+### `env.js` / `window.__ENV__`
+
+| Key | Description |
+|---|---|
+| `GH_TOKEN` | GitHub Personal Access Token. Empty = unauthenticated (60 req/hr). Set = 5 000 req/hr. |
+
 ### `script.js` constants
 
 | Constant | Default | Description |
 |---|---|---|
 | `CONFIG_PATH` | `'config.json'` | Path/URL to the config file |
 | `REFRESH_INTERVAL_SEC` | `60` | Fallback refresh interval if not set in config |
-| `GH_TOKEN` | `''` | Optional GitHub PAT — leave empty for unauthenticated mode |
-| `CACHE_TTL_MS` | `5 * 60 * 1000` | Fallback cache TTL if not set in config |
+| `CACHE_TTL_MS` | `5 * 60 * 1000` | Fallback cache TTL (ms) if not set in config |
+
+> `GH_TOKEN` is **no longer a constant in `script.js`** — it is read at runtime from `window.__ENV__.GH_TOKEN` (injected by `env.js`). Never put a real token in `script.js`.
 
 ---
 
@@ -158,6 +194,55 @@ Just extend the `teams` array in `config.json`:
 ```
 
 There is no limit on the number of teams or members per team.
+
+---
+
+## 🚀 Deployment
+
+### Vercel (recommended)
+
+The project includes a `vercel.json` and `build.js` that handle token injection automatically.
+
+1. Push the repo to GitHub (make sure `env.js` is gitignored ✅)
+2. Import the project on [vercel.com](https://vercel.com)
+3. Go to **Project → Settings → Environment Variables**
+4. Add `GH_TOKEN` = `ghp_your_token_here` (select all environments)
+5. Click **Deploy** (or redeploy if already deployed)
+
+At build time Vercel runs `node build.js`, which reads `process.env.GH_TOKEN` and writes `env.js` into the output. The token stays server-side during the build and is baked into the static file — it never touches your git history.
+
+```
+Vercel env var (GH_TOKEN)
+        │
+        ▼
+   build.js  (runs at deploy)
+        │  writes
+        ▼
+     env.js  (in the deployed bundle)
+        │  sets
+        ▼
+  window.__ENV__.GH_TOKEN
+        │  read by
+        ▼
+     script.js
+```
+
+### GitHub Pages
+
+GitHub Pages has no build step, so `build.js` won't run. Use one of these instead:
+
+- **No token** — rely on the 5-minute cache (60 req/hr shared across users)
+- **GitHub Actions** — add a workflow that runs `node build.js` (with `GH_TOKEN` as a repo secret) and pushes the built `env.js` to the `gh-pages` branch
+
+### Netlify
+
+Same as Vercel — set `GH_TOKEN` in **Site settings → Environment variables** and add to `netlify.toml`:
+
+```toml
+[build]
+  command = "node build.js"
+  publish = "."
+```
 
 ---
 
