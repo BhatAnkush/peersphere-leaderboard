@@ -6,12 +6,138 @@
   },
   "teams": [
     {
-      "teamName": "Team PeerSphere",
-      "repo": "https://github.com/BhatAnkush/peersphere-leaderboard",
+      "teamName": "Project1",
+      "repo": "https://github.com/PeerSquareProjects2029/Project1",
       "members": [
-        { "name": "Ankush Bhat", "githubUsername": "BhatAnkush", "email": "ankushbhataab@gmail.com" },
-        { "name": "Adish yermal", "githubUsername": "the-ay", "email": "adishyermal12@gmail.com" },
-        { "name": "Skanda Ganesh ", "githubUsername": "Skandaganesh", "email": "skandaganeshpv@gmail.com" }
+        { "name": "yuktanaik12", "githubUsername": "yuktanaik12", "email": "yuktanaik1209@gmail.com" }
+      ]
+    },
+    {
+      "teamName": "Project2",
+      "repo": "https://github.com/PeerSquareProjects2029/Project2",
+      "members": [
+        { "name": "shamap2007", "githubUsername": "shamap2007", "email": "shamap5515@gmail.com" },
+        { "name": "meghanapatgar30-stack", "githubUsername": "meghanapatgar30-stack", "email": "meghanapatgar30@gmail.com" },
+        { "name": "thushara-bajimar", "githubUsername": "thushara-bajimar", "email": "abhibajimar07@gmail.com" },
+        { "name": "Renvian", "githubUsername": "Renvian", "email": "vianrenvil@gmail.com" }
+      ]
+    },
+    {
+      "teamName": "Project3",
+      "repo": "https://github.com/PeerSquareProjects2029/Project3",
+      "members": [
+        { "name": "BhatAnkush", "githubUsername": "BhatAnkush", "email": "ankushbhataab@gmail.com" }
+      ]
+    },
+    {
+      "teamName": "Project4",
+      "repo": "https://github.com/PeerSquareProjects2029/Project4",
+      "members": [
+        { "name": "ravi-1936", "githubUsername": "ravi-1936", "email": "www.ravirp123@gmail.com" },
+        { "name": "TXPratham", "githubUsername": "TXPratham", "email": "prathamku3041@gmail.com" },
+        { "name": "Dhritibleh", "githubUsername": "Dhritibleh", "email": "raidhriti8@gmail.com" },
+        { "name": "la-li07", "githubUsername": "la-li07", "email": "Laharik290@gmail.com" }
+      ]
+    },
+    {
+      "teamName": "Project5",
+      "repo": "https://github.com/PeerSquareProjects2029/Project5",
+      "members": [
+        { "name": "PRAJWALKUMAR901", "githubUsername": "PRAJWALKUMAR901", "email": "prajwalkumar727a@gmail.com" },
+        { "name": "kanishka-eng", "githubUsername": "kanishka-eng", "email": "kanishkanithindevadiga@gmail.com" }
+      ]
+    },
+    {
+      "teamName": "Project6",
+      "repo": "https://github.com/PeerSquareProjects2029/Project6",
+      "members": [
+        { "name": "733v4n", "githubUsername": "733v4n", "email": "jeevanalmelkar11@gmail.com" },
+        { "name": "ananyasbhat09", "githubUsername": "ananyasbhat09", "email": "ananyasbhat09@gmail.com" },
+        { "name": "APRao11", "githubUsername": "APRao11", "email": "adithiprao8@gmail.com" }
+      ]
+    },
+    {
+      "teamName": "Project7",
+      "repo": "https://github.com/PeerSquareProjects2029/Project7",
+      "members": [
+        { "name": "BhatAnkush", "githubUsername": "BhatAnkush", "email": "ankushbhataab@gmail.com" }
+      ]
+    },
+    {
+      "teamName": "Project8",
+      "repo": "https://github.com/PeerSquareProjects2029/Project8",
+      "members": [
+        { "name": "BhatAnkush", "githubUsername": "BhatAnkush", "email": "ankushbhataab@gmail.com" }
+      ]
+    },
+    {
+      "teamName": "Project9",
+      "repo": "https://github.com/PeerSquareProjects2029/Project9",
+      "members": [
+        { "name": "BhatAnkush", "githubUsername": "BhatAnkush", "email": "ankushbhataab@gmail.com" }
+      ]
+    },
+    {
+      "teamName": "Project10",
+      "repo": "https://github.com/PeerSquareProjects2029/Project10",
+      "members": [
+        { "name": "Kamakshishenoy", "githubUsername": "Kamakshishenoy", "email": "kamakshishenoy07@gmail.com" },
+        { "name": "dhruva207-ctrml", "githubUsername": "dhruva207-ctrml", "email": "sdhruva207@gmail.com" },
+        { "name": "Dhanvitha-S", "githubUsername": "Dhanvitha-S", "email": "dhanvithas3376@gmail.com" },
+        { "name": "sanjanasgowda01", "githubUsername": "sanjanasgowda01", "email": "sanjanasgowda001@gmail.com" }
+      ]
+    },
+    {
+      "teamName": "Project11",
+      "repo": "https://github.com/PeerSquareProjects2029/Project11",
+      "members": [
+        { "name": "thrshagarasa", "githubUsername": "thrshagarasa", "email": "thrshagarasa@gmail.com" },
+        { "name": "kmarchana967-dot", "githubUsername": "kmarchana967-dot", "email": "kmarchana967@gmail.com" },
+        { "name": "MANVITHAPAI19", "githubUsername": "MANVITHAPAI19", "email": "paimanvitha4@gmail.com" }
+      ]
+    },
+    {
+      "teamName": "Project12",
+      "repo": "https://github.com/PeerSquareProjects2029/Project12",
+      "members": [
+        { "name": "BhatAnkush", "githubUsername": "BhatAnkush", "email": "ankushbhataab@gmail.com" }
+      ]
+    },
+    {
+      "teamName": "Project13",
+      "repo": "https://github.com/PeerSquareProjects2029/Project13",
+      "members": [
+        { "name": "Kamakshishenoy", "githubUsername": "Kamakshishenoy", "email": "kamakshishenoy07@gmail.com" },
+        { "name": "dhruva207-ctrml", "githubUsername": "dhruva207-ctrml", "email": "sdhruva207@gmail.com" },
+        { "name": "Dhanvitha-S", "githubUsername": "Dhanvitha-S", "email": "dhanvithas3376@gmail.com" },
+        { "name": "sanjanasgowda01", "githubUsername": "sanjanasgowda01", "email": "sanjanasgowda001@gmail.com" }
+      ]
+    },
+    {
+      "teamName": "Project14",
+      "repo": "https://github.com/PeerSquareProjects2029/Project14",
+      "members": [
+        { "name": "DhirajB05", "githubUsername": "DhirajB05", "email": "dhirajbhavikatti05@gmail.com" },
+        { "name": "Sameeksha-code-stack", "githubUsername": "Sameeksha-code-stack", "email": "sameekshaa549@gmail.com" },
+        { "name": "sakshishivananda247-cell", "githubUsername": "sakshishivananda247-cell", "email": "sakshishivananda247@gmail.com" },
+        { "name": "ankushshetty2007-code", "githubUsername": "ankushshetty2007-code", "email": "ankushshetty2007@gmail.com" }
+      ]
+    },
+    {
+      "teamName": "Project15",
+      "repo": "https://github.com/PeerSquareProjects2029/Project15",
+      "members": [
+        { "name": "BhatAnkush", "githubUsername": "BhatAnkush", "email": "ankushbhataab@gmail.com" }
+      ]
+    },
+    {
+      "teamName": "Project16",
+      "repo": "https://github.com/PeerSquareProjects2029/Project16",
+      "members": [
+        { "name": "Spandana-Gowda77", "githubUsername": "Spandana-Gowda77", "email": "spandanaperiyadka@gmail.com" },
+        { "name": "gaanavijpy", "githubUsername": "gaanavijpy", "email": "gaanavi.jpy@gmail.com" },
+        { "name": "jiyashetty33", "githubUsername": "jiyashetty33", "email": "Jiyashetty33@gmail.com" },
+        { "name": "Monisha-Mshetty", "githubUsername": "Monisha-Mshetty", "email": "monishashetty060@gmail.com" }
       ]
     }
   ]

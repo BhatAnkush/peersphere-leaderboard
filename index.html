@@ -1,31 +1,65 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PeerSphere Leaderboard — Today's Ship Log</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css">
-<link rel="icon" type="image/png" sizes="32x32" href="/peersphere.png">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PeerSphere Leaderboard</title>
+  <meta name="description" content="Real-time GitHub commit leaderboard for PeerSphere projects. Track daily contributions across teams and contributors.">
+  <meta name="theme-color" content="#06090f">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="PeerSphere Leaderboard">
+  <meta property="og:description" content="Real-time GitHub commit leaderboard across all PeerSphere projects.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="./peersphere.png">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="PeerSphere Leaderboard">
+  <meta name="twitter:description" content="Real-time GitHub commit leaderboard across all PeerSphere projects.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" type="image/png" sizes="32x32" href="/peersphere.png">
 </head>
 <body>
 <div class="wrap">
 
   <header>
     <div class="brand">
-        <a href="./" id="brandLogo"><img src="./peersphere.png" alt="PeerSphere logo"></a>
+      <a href="./" id="brandLogo"><img src="./peersphere.png" alt="PeerSphere logo"></a>
       <div>
         <h1>PeerSphere <span class="accent">Leaderboard</span></h1>
         <div class="tag">Today's commit leaderboard, across every branch</div>
       </div>
     </div>
     <div class="status">
-      <span class="date-chip" id="todayChip">—</span>
-      <span><span class="pulse-dot"></span><span id="lastUpdated">syncing…</span></span>
-      <button id="refreshBtn">↻ Refresh</button>
+      <span class="date-chip" id="todayChip">&mdash;</span>
+      <span><span class="pulse-dot"></span><span id="lastUpdated">syncing&hellip;</span></span>
+      <button id="refreshBtn">&#8635; Refresh</button>
     </div>
   </header>
+
+  <div class="stats-bar" id="statsBar">
+    <div class="stat-card">
+      <div class="stat-label">Total Commits</div>
+      <div class="stat-value" id="statCommits">0</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Active Teams</div>
+      <div class="stat-value" id="statTeams">0</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Contributors</div>
+      <div class="stat-value" id="statContributors">0</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Top Team</div>
+      <div class="stat-value" id="statTopTeam" style="font-size:15px;">&mdash;</div>
+    </div>
+  </div>
 
   <div class="tabs">
     <button class="tab-btn active" data-view="team">Group Leaderboard</button>
@@ -42,11 +76,8 @@
 
 </div>
 
-
-
 <div id="toast"></div>
 
-<!-- Inline fallback: guarantees window.__ENV__ exists even if env.js fails to load -->
 <script>window.__ENV__ = window.__ENV__ || { GH_TOKEN: '' };</script>
 <script src="env.js" onerror="console.warn('env.js not found — running without a GitHub token')"></script>
 <script src="script.js"></script>

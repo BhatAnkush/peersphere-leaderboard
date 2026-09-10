@@ -1,8 +1,8 @@
 const state = {
   view: 'team',
   config: null,
-  teamStats: [],   // [{teamName, repo, commits, members:[...]}]
-  userStats: [],   // [{name, username, email, team, commits, avatar}]
+  teamStats: [],
+  userStats: [],
   timer: null,
 };
 
@@ -10,9 +10,7 @@ const $ = sel => document.querySelector(sel);
 
 const CONFIG_PATH = 'config.json';
 const REFRESH_INTERVAL_SEC = 60;
-const CACHE_TTL_MS = 5 * 60 * 1000; // 5 min fallback; overridden by config.json cacheTTLMinutes
-// Token is injected at runtime from env.js (local) or build.js+Vercel env vars (production).
-// Never hardcode a real token here — this file is committed to git.
+const CACHE_TTL_MS = 5 * 60 * 1000;
 const GH_TOKEN = (window.__ENV__ && window.__ENV__.GH_TOKEN) || '';
 
 /* ---------- cache helpers ---------- */
@@ -28,7 +26,7 @@ function readCache(){
     const ttl = (state.config && state.config.settings && state.config.settings.cacheTTLMinutes)
       ? state.config.settings.cacheTTLMinutes * 60 * 1000
       : CACHE_TTL_MS;
-    if (Date.now() - ts > ttl) return null; // stale
+    if (Date.now() - ts > ttl) return null;
     return { teamStats, userStats };
   }catch(e){ return null; }
 }
@@ -83,7 +81,7 @@ async function fetchAllBranches(owner, repo, token){
     all = all.concat(data);
     if (data.length < 100) break;
     page++;
-    if (page > 10) break; // safety cap
+    if (page > 10) break;
   }
   return all;
 }
@@ -96,7 +94,7 @@ async function fetchCommitsSince(owner, repo, sha, sinceISO, token){
     try{
       data = await ghFetch(url, token);
     }catch(e){
-      if (e.message === 'NOT_FOUND') return all; // branch might be protected/odd
+      if (e.message === 'NOT_FOUND') return all;
       throw e;
     }
     all = all.concat(data);
@@ -127,11 +125,11 @@ async function buildStats(){
   const token = GH_TOKEN;
   const since = startOfTodayISO();
   const teamStats = [];
-  const userMap = new Map(); // key username -> stats
+  const userMap = new Map();
 
   for (const team of state.config.teams){
     const or = ownerRepoFromUrl(team.repo);
-    if (!or){ continue; }
+    if (!or) continue;
     const seenShas = new Set();
     let teamCommitCount = 0;
 
@@ -159,7 +157,7 @@ async function buildStats(){
         }
       }
     }catch(e){
-      toast(`${team.teamName}: ${e.message === 'RATE_LIMIT' ? 'GitHub rate limit hit — set GH_TOKEN in script.js' : 'error fetching ' + or.repo}`, true);
+      toast(`${team.teamName}: ${e.message === 'RATE_LIMIT' ? 'GitHub rate limit — add GH_TOKEN' : 'error fetching ' + or.repo}`, true);
     }
 
     teamStats.push({
@@ -179,6 +177,45 @@ async function buildStats(){
   writeCache(teamStats, userStats);
 }
 
+/* ---------- animated counter ---------- */
+function animateValue(el, start, end, duration){
+  if (start === end){ el.textContent = end.toLocaleString(); return; }
+  const startTime = performance.now();
+  function tick(now){
+    const elapsed = now - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3);
+    const current = Math.round(start + (end - start) * eased);
+    el.textContent = current.toLocaleString();
+    if (progress < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
+function updateStatsBar(){
+  const totalCommits = state.teamStats.reduce((s,t)=>s+t.commits, 0);
+  const activeTeams = state.teamStats.filter(t=>t.commits > 0).length;
+  const activeUsers = state.userStats.filter(u=>u.commits > 0).length;
+  const topTeam = state.teamStats.length ? state.teamStats[0] : null;
+
+  const prev = {
+    commits: parseInt($('#statCommits').dataset.val || '0'),
+    teams: parseInt($('#statTeams').dataset.val || '0'),
+    users: parseInt($('#statContributors').dataset.val || '0'),
+  };
+
+  $('#statCommits').dataset.val = totalCommits;
+  $('#statTeams').dataset.val = activeTeams;
+  $('#statContributors').dataset.val = activeUsers;
+
+  animateValue($('#statCommits'), prev.commits, totalCommits, 600);
+  animateValue($('#statTeams'), prev.teams, activeTeams, 500);
+  animateValue($('#statContributors'), prev.users, activeUsers, 500);
+
+  $('#statTopTeam').textContent = topTeam && topTeam.commits > 0 ? topTeam.teamName : '\u2014';
+}
+
+/* ---------- render ---------- */
 function initialAvatarSvg(letter, bg){
   return `data:image/svg+xml;utf8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80"><rect width="80" height="80" rx="40" fill="${bg}"/><text x="50%" y="55%" font-family="monospace" font-size="32" fill="#fff" text-anchor="middle">${letter}</text></svg>`)}`;
 }
@@ -192,7 +229,7 @@ function renderPodium(items, type){
   }
   podium.style.display = 'flex';
   const top3 = items.slice(0,3);
-  const heights = [190,140,100];
+  const heights = [200,150,110];
 
   top3.forEach((item, idx)=>{
     const rank = idx+1;
@@ -206,8 +243,8 @@ function renderPodium(items, type){
 
     slot.innerHTML = `
       <div class="podium-card">
-        <div class="medal">${rank===1?'🥇':rank===2?'🥈':'🥉'}</div>
-        <img class="podium-avatar" src="${avatar}" onerror="this.src='${initialAvatarSvg((label||'?').charAt(0).toUpperCase(),'#2fae65')}'">
+        <div class="medal">${rank===1?'&#129351;':rank===2?'&#129352;':'&#129353;'}</div>
+        <img class="podium-avatar" src="${avatar}" onerror="this.src='${initialAvatarSvg((label||'?').charAt(0).toUpperCase(),'#1f7a49')}'" alt="${label}">
         <div class="podium-name">${label}</div>
         <div class="podium-sub">${sub}</div>
         <div class="podium-score">${item.commits}<span>commits</span></div>
@@ -217,7 +254,6 @@ function renderPodium(items, type){
     podium.appendChild(slot);
   });
 
-  // staged reveal: 3rd, then 2nd, then 1st — classic ceremony order
   const order = [3,2,1];
   order.forEach((rank, i)=>{
     const el = podium.querySelector(`.rank-${rank}`);
@@ -227,7 +263,7 @@ function renderPodium(items, type){
       const base = el.querySelector('.podium-base');
       const h = heights[rank-1];
       requestAnimationFrame(()=> base.style.height = h + 'px');
-    }, i*380);
+    }, i*400);
   });
 }
 
@@ -238,11 +274,11 @@ function renderList(items, type){
 
   const rest = items.slice(3);
   if (!items.length){
-    body.innerHTML = `<div class="empty-state"><span class="g">⌁</span>No commits found for today yet. Check back soon.</div>`;
+    body.innerHTML = `<div class="empty-state"><span class="g">&#9889;</span><p>No commits found for today yet. Check back soon.</p></div>`;
     return;
   }
   if (!rest.length){
-    body.innerHTML = `<div class="empty-state"><span class="g">🏁</span>Only the podium today — everyone else is still warming up.</div>`;
+    body.innerHTML = `<div class="empty-state"><span class="g">&#127937;</span><p>Only the podium today &mdash; everyone else is still warming up.</p></div>`;
     return;
   }
   const max = items[0].commits || 1;
@@ -251,16 +287,16 @@ function renderList(items, type){
     const rank = i+4;
     const row = document.createElement('div');
     row.className = 'row';
-    row.style.animationDelay = (i*45)+'ms';
+    row.style.animationDelay = (i*50)+'ms';
     const label = type === 'team' ? item.teamName : item.name;
     const meta = type === 'team' ? `${item.members.length} members` : '@'+item.username;
     const avatar = type === 'team'
-      ? initialAvatarSvg(item.teamName.charAt(0).toUpperCase(), '#1f7a49')
+      ? initialAvatarSvg(item.teamName.charAt(0).toUpperCase(), '#1a6b42')
       : item.avatar;
     row.innerHTML = `
       <div class="rank">#${rank}</div>
       <div class="who">
-        <img src="${avatar}" onerror="this.src='${initialAvatarSvg((label||'?').charAt(0).toUpperCase(),'#1f7a49')}'">
+        <img src="${avatar}" onerror="this.src='${initialAvatarSvg((label||'?').charAt(0).toUpperCase(),'#1a6b42')}'" alt="${label}">
         <div>
           <div class="name">${label}</div>
           <div class="meta">${meta}</div>
@@ -286,16 +322,16 @@ function render(){
 }
 
 async function refreshAll(manual = false){
-  $('#lastUpdated').textContent = 'syncing…';
+  $('#lastUpdated').textContent = 'syncing\u2026';
 
-  // use cache unless this is a manual force-refresh
   if (!manual){
     const cached = readCache();
     if (cached){
       state.teamStats = cached.teamStats;
       state.userStats = cached.userStats;
       render();
-      $('#lastUpdated').textContent = 'from cache · ' + new Date().toLocaleTimeString();
+      updateStatsBar();
+      $('#lastUpdated').textContent = 'from cache \u00b7 ' + new Date().toLocaleTimeString();
       return;
     }
   } else {
@@ -305,6 +341,7 @@ async function refreshAll(manual = false){
   try{
     await buildStats();
     render();
+    updateStatsBar();
     $('#lastUpdated').textContent = 'updated ' + new Date().toLocaleTimeString();
   }catch(e){
     $('#lastUpdated').textContent = 'sync failed';
@@ -314,7 +351,7 @@ async function refreshAll(manual = false){
 
 function scheduleAutoRefresh(){
   if (state.timer) clearInterval(state.timer);
-  state.timer = setInterval(refreshAll, Math.max(REFRESH_INTERVAL_SEC, 20) * 1000);
+  state.timer = setInterval(()=>refreshAll(), Math.max(REFRESH_INTERVAL_SEC, 20) * 1000);
 }
 
 async function loadConfigAndStart(){
