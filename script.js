@@ -4,9 +4,14 @@ const state = {
   teamStats: [],
   userStats: [],
   timer: null,
+  search: '',
+  sort: 'commits',
+  loading: true,
+  refreshing: false,
 };
 
 const $ = sel => document.querySelector(sel);
+const SEARCH_DEBOUNCE_MS = 180;
 
 const CONFIG_PATH = 'config.json';
 const REFRESH_INTERVAL_SEC = 60;
@@ -223,6 +228,35 @@ function updateStatsBar(){
   $('#statTopTeam').textContent = topTeam && topTeam.commits > 0 ? topTeam.teamName : '\u2014';
 }
 
+/* ---------- filter + sort ---------- */
+function itemMatchesQuery(item, type, query){
+  if (!query) return true;
+  const q = query.toLowerCase();
+  if (type === 'team'){
+    if (item.teamName.toLowerCase().includes(q)) return true;
+    return item.members.some(m =>
+      (m.name && m.name.toLowerCase().includes(q)) ||
+      (m.githubUsername && m.githubUsername.toLowerCase().includes(q))
+    );
+  }
+  return (item.name && item.name.toLowerCase().includes(q)) ||
+    (item.username && item.username.toLowerCase().includes(q)) ||
+    (item.team && item.team.toLowerCase().includes(q));
+}
+
+function getVisibleItems(){
+  const base = state.view === 'team' ? state.teamStats : state.userStats;
+  let items = base.filter(it => itemMatchesQuery(it, state.view, state.search.trim()));
+  if (state.sort === 'alpha'){
+    items = [...items].sort((a,b) => {
+      const an = (state.view === 'team' ? a.teamName : a.name) || '';
+      const bn = (state.view === 'team' ? b.teamName : b.name) || '';
+      return an.localeCompare(bn);
+    });
+  }
+  return items;
+}
+
 /* ---------- render ---------- */
 function initialAvatarSvg(letter, bg){
   return `data:image/svg+xml;utf8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80"><rect width="80" height="80" rx="40" fill="${bg}"/><text x="50%" y="55%" font-family="monospace" font-size="32" fill="#fff" text-anchor="middle">${letter}</text></svg>`)}`;
@@ -276,24 +310,27 @@ function renderPodium(items, type){
   });
 }
 
-function renderList(items, type){
+function renderList(items, type, opts){
+  const { rest, startRank, max, isFiltered, hasAnyData } = opts;
   const body = $('#listBody');
   body.innerHTML = '';
   $('#colLabel').textContent = type === 'team' ? 'Team' : 'Contributor';
 
-  const rest = items.slice(3);
-  if (!items.length){
+  if (!hasAnyData){
     body.innerHTML = `<div class="empty-state"><span class="g">${ZAP_SVG}</span><p>No commits found for today yet. Check back soon.</p></div>`;
+    return;
+  }
+  if (isFiltered && !items.length){
+    body.innerHTML = `<div class="empty-state"><span class="g">${ZAP_SVG}</span><p>No match for &ldquo;${escapeHtml(state.search.trim())}&rdquo;. Try a different name or team.</p></div>`;
     return;
   }
   if (!rest.length){
     body.innerHTML = `<div class="empty-state"><span class="g">${FLAG_SVG}</span><p>Only the podium today &mdash; everyone else is still warming up.</p></div>`;
     return;
   }
-  const max = items[0].commits || 1;
 
   rest.forEach((item, i)=>{
-    const rank = i+4;
+    const rank = startRank + i;
     const row = document.createElement('div');
     row.className = 'row';
     row.style.animationDelay = (i*50)+'ms';
@@ -325,23 +362,88 @@ function renderList(items, type){
   });
 }
 
+function escapeHtml(str){
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
 function render(){
-  const items = state.view === 'team' ? state.teamStats : state.userStats;
-  renderPodium(items, state.view);
-  renderList(items, state.view);
+  const type = state.view;
+  const baseItems = type === 'team' ? state.teamStats : state.userStats;
+  const isFiltered = !!state.search.trim();
+  const showPodium = !isFiltered && state.sort === 'commits';
+  const items = getVisibleItems();
+
+  if (showPodium){
+    // items is the full roster sorted by commits desc. Only nonzero entries
+    // earn a podium spot; everyone else (including 0-commit teams/people)
+    // still shows up in the list below so the full roster stays visible.
+    const podiumItems = items.slice(0, 3).filter(it => it.commits > 0);
+    renderPodium(podiumItems, type);
+    const rest = items.slice(podiumItems.length);
+    const max = items.length ? (items[0].commits || 1) : 1;
+    renderList(items, type, {
+      rest,
+      startRank: podiumItems.length + 1,
+      max,
+      isFiltered: false,
+      hasAnyData: items.length > 0,
+    });
+  } else {
+    $('#podium').style.display = 'none';
+    $('#podium').innerHTML = '';
+    const max = items.length ? (items[0].commits || 1) : 1;
+    renderList(items, type, {
+      rest: items,
+      startRank: 1,
+      max,
+      isFiltered,
+      hasAnyData: isFiltered ? baseItems.length > 0 : items.length > 0,
+    });
+  }
+
+  updateResultsCount(items.length, baseItems.length, isFiltered);
+}
+
+function updateResultsCount(shown, total, isFiltered){
+  const el = $('#resultsCount');
+  if (!el) return;
+  if (!isFiltered){
+    el.textContent = '';
+    return;
+  }
+  el.textContent = `${shown} of ${total} match`;
+}
+
+function setSyncing(isSyncing){
+  state.refreshing = isSyncing;
+  const btn = $('#refreshBtn');
+  const dot = $('#pulseDot');
+  btn.classList.toggle('is-spinning', isSyncing);
+  btn.disabled = isSyncing;
+  if (dot) dot.classList.toggle('is-error', false);
+}
+
+function setLoadingSkeleton(isLoading){
+  state.loading = isLoading;
+  document.body.classList.toggle('is-loading', isLoading);
 }
 
 async function refreshAll(manual = false){
   $('#lastUpdated').textContent = 'syncing\u2026';
+  setSyncing(true);
 
   if (!manual){
     const cached = readCache();
     if (cached){
       state.teamStats = cached.teamStats;
       state.userStats = cached.userStats;
+      setLoadingSkeleton(false);
       render();
       updateStatsBar();
       $('#lastUpdated').textContent = 'from cache \u00b7 ' + new Date().toLocaleTimeString();
+      setSyncing(false);
       return;
     }
   } else {
@@ -350,12 +452,18 @@ async function refreshAll(manual = false){
 
   try{
     await buildStats();
+    setLoadingSkeleton(false);
     render();
     updateStatsBar();
     $('#lastUpdated').textContent = 'updated ' + new Date().toLocaleTimeString();
   }catch(e){
+    setLoadingSkeleton(false);
     $('#lastUpdated').textContent = 'sync failed';
-    toast('Sync failed: ' + e.message, true);
+    const dot = $('#pulseDot');
+    if (dot) dot.classList.add('is-error');
+    toast('Sync failed: ' + e.message + ' \u2014 tap Refresh to retry', true);
+  }finally{
+    setSyncing(false);
   }
 }
 
@@ -381,13 +489,47 @@ async function loadConfigAndStart(){
 /* ---------- events ---------- */
 document.querySelectorAll('.tab-btn').forEach(btn=>{
   btn.addEventListener('click', ()=>{
-    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b=>{
+      b.classList.remove('active');
+      b.setAttribute('aria-selected','false');
+    });
     btn.classList.add('active');
+    btn.setAttribute('aria-selected','true');
     state.view = btn.dataset.view;
+    const search = $('#searchInput');
+    search.placeholder = state.view === 'team'
+      ? 'Search teams or contributors\u2026'
+      : 'Search contributors or teams\u2026';
     render();
   });
 });
 
 $('#refreshBtn').addEventListener('click', () => refreshAll(true));
 
+let searchDebounce;
+const searchInput = $('#searchInput');
+const searchClear = $('#searchClear');
+searchInput.addEventListener('input', ()=>{
+  clearTimeout(searchDebounce);
+  const val = searchInput.value;
+  searchClear.hidden = !val;
+  searchDebounce = setTimeout(()=>{
+    state.search = val;
+    if (!state.loading) render();
+  }, SEARCH_DEBOUNCE_MS);
+});
+searchClear.addEventListener('click', ()=>{
+  searchInput.value = '';
+  searchClear.hidden = true;
+  state.search = '';
+  searchInput.focus();
+  if (!state.loading) render();
+});
+
+$('#sortSelect').addEventListener('change', (e)=>{
+  state.sort = e.target.value;
+  if (!state.loading) render();
+});
+
+setLoadingSkeleton(true);
 loadConfigAndStart();
