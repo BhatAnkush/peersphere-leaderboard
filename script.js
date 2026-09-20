@@ -26,10 +26,10 @@ function medalSvg(){
   return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.5 12.5 17 22l-5-3-5 3 1.5-9.5"/><circle cx="12" cy="8" r="2" fill="currentColor"/></svg>';
 }
 
-/* ---------- cache helpers ---------- */
+const CACHE_SCHEMA = 'v2';
 function cacheKey(){
   const d = new Date();
-  return `ps_lb_cache_${d.getFullYear()}_${d.getMonth()}_${d.getDate()}`;
+  return `ps_lb_cache_${CACHE_SCHEMA}_${d.getFullYear()}_${d.getMonth()}_${d.getDate()}`;
 }
 function readCache(){
   try{
@@ -50,6 +50,16 @@ function writeCache(teamStats, userStats){
 }
 function clearCache(){
   localStorage.removeItem(cacheKey());
+}
+
+function backfillFromConfig(){
+  if (!state.config || !Array.isArray(state.config.teams)) return;
+  const repoByTeam = new Map(state.config.teams.map(t => [t.teamName, t.repo]));
+  state.userStats.forEach(u => {
+    if (!u.teamRepo && u.team && repoByTeam.has(u.team)){
+      u.teamRepo = repoByTeam.get(u.team);
+    }
+  });
 }
 
 function toast(msg, isErr){
@@ -149,7 +159,7 @@ async function buildStats(){
     for (const m of team.members){
       const key = m.githubUsername.toLowerCase();
       if (!userMap.has(key)){
-        userMap.set(key, { name:m.name, username:m.githubUsername, email:m.email, team:team.teamName, commits:0, avatar:`https://github.com/${m.githubUsername}.png?size=80` });
+        userMap.set(key, { name:m.name, username:m.githubUsername, email:m.email, team:team.teamName, teamRepo:team.repo, commits:0, avatar:`https://github.com/${m.githubUsername}.png?size=80` });
       }
     }
 
@@ -340,6 +350,11 @@ function renderList(items, type, opts){
     const avatar = type === 'team'
       ? initialAvatarSvg(item.teamName.charAt(0).toUpperCase(), '#1a6b42')
       : item.avatar;
+    const teamCell = type === 'user'
+      ? (item.teamRepo
+          ? `<div class="team-cell"><a href="${item.teamRepo}" target="_blank" rel="noopener" class="team-link" title="Open ${item.team} repo">${item.team}</a></div>`
+          : `<div class="team-cell"><span class="team-link team-link-plain">${item.team || '\u2014'}</span></div>`)
+      : '';
     row.innerHTML = `
       <div class="rank">#${rank}</div>
       <div class="who">
@@ -349,6 +364,7 @@ function renderList(items, type, opts){
           <div class="meta">${meta}</div>
         </div>
       </div>
+      ${teamCell}
       <div class="bar-wrap"><div class="bar-fill" data-w="${(item.commits/max*100).toFixed(1)}"></div></div>
       <div class="commits">${item.commits}<span> cmts</span></div>
     `;
@@ -374,6 +390,8 @@ function render(){
   const isFiltered = !!state.search.trim();
   const showPodium = !isFiltered && state.sort === 'commits';
   const items = getVisibleItems();
+
+  document.querySelector('.board-panel').classList.toggle('mode-user', type === 'user');
 
   if (showPodium){
     // items is the full roster sorted by commits desc. Only nonzero entries
@@ -439,6 +457,7 @@ async function refreshAll(manual = false){
     if (cached){
       state.teamStats = cached.teamStats;
       state.userStats = cached.userStats;
+      backfillFromConfig();
       setLoadingSkeleton(false);
       render();
       updateStatsBar();
